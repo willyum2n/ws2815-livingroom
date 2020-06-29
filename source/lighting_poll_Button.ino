@@ -20,11 +20,15 @@ CRGB ledStrip[LED_COUNT];            // Storage for color data
 const int LED_DATA_PIN = 6;          // This is the output pin that delivers Color data to the LED Strip
 LightingMode lightingMode = Off;     // We start with the lights off
 
-// On Button
-const int LIGHTING_ON_BUTTON_PIN = 2; // (Active-Low) Input pin connects to the button that will turn on/off the lights
-int onButton_State = RELEASED;        // the current currentButtonState of the input pin for Lighting_On_Button
-bool onButton_IsDebouncing = false;   // Used to track when we are in a debounce situation after the OnButton input toggles state
-long onButton_LastDebounceTime = 0;   // the last time the output pin was toggled
+// Rotary Encoder with OnBoard switch
+const int RE_SW_PIN = 2;        // (Active-Low) Input pin connects to the SW pin on the Rotary Encoder that will turn on/off the lights
+int sw_State = RELEASED;        // the current currentButtonState of the input pin for Lighting_On_Button
+bool sw_IsDebouncing = false;   // Used to track when we are in a debounce situation after the OnButton input toggles state
+long sw_LastDebounceTime = 0;   // the last time the output pin was toggled
+uint8_t reValue = 100;          // Tracks the current value of the Rotary Encoder
+const int RE_MIN = 10;
+const int RE_MAX = 100;
+const int RE_STEP = 5;
 
 // Mode Button
 const int LIGHTING_MODE_BUTTON_PIN = 3; // (Active-Low) Input pin connects to the button that will change the mode of the lights
@@ -35,6 +39,9 @@ long modeButton_LastDebounceTime = 0;   // the last time the output pin was togg
 // the following variables are long's because the time, measured in milliseconds,
 // will quickly become a bigger number than can be stored in an int.
 long debounceDelay = 50;    // the debounce time; increase if the output flickers
+
+const int RE_DATA_PIN = 8;
+const int RE_CLK_PIN = 9;
 
 
 // OnBoard LED for testing buttons
@@ -52,8 +59,12 @@ void setup() {
   fill_solid(ledStrip, LED_COUNT, CRGB::Black);
   FastLED.show();
 
-  // Initialize the buttons
-  pinMode(LIGHTING_ON_BUTTON_PIN, INPUT_PULLUP);
+  // Initialize the Rotary Encoder
+  pinMode(RE_SW_PIN, INPUT);        //TODO: I think the Rotary Encoder has a pullup resistor on board...check this
+  pinMode(RE_CLK_PIN, INPUT_PULLUP);
+  pinMode(RE_DATA_PIN, INPUT_PULLUP);
+
+  // Initialize the Momentary Switch
   pinMode(LIGHTING_MODE_BUTTON_PIN, INPUT_PULLUP);
 
 }
@@ -65,27 +76,27 @@ void loop() {
   int currentButtonState = RELEASED;
 
   // ---- Watch the main On Button for state changes -------------------------------------------
-  currentButtonState = digitalRead(LIGHTING_ON_BUTTON_PIN);
-  if (currentButtonState == onButton_State) {
-    onButton_IsDebouncing = false;
+  currentButtonState = digitalRead(RE_SW_PIN);
+  if (currentButtonState == sw_State) {
+    sw_IsDebouncing = false;
   } else {
-    if (onButton_IsDebouncing) {
-      if ((millis() - onButton_LastDebounceTime) > debounceDelay) {
+    if (sw_IsDebouncing) {
+      if ((millis() - sw_LastDebounceTime) > debounceDelay) {
         // whatever the currentButtonState is at, it's been there for longer
         // than the debounce delay, so take it as the actual current state:
-        onButton_State = currentButtonState;
-        onButton_IsDebouncing = false;
+        sw_State = currentButtonState;
+        sw_IsDebouncing = false;
         Serial.print("Debounce complete! Current state is: ");
-        Serial.print(onButton_State == PRESSED ? "PRESSED\n" : "RELEASED\n");
-        digitalWrite(TEST_LED_PIN, ((onButton_State == PRESSED) ? HIGH : LOW));
+        Serial.print(sw_State == PRESSED ? "PRESSED\n" : "RELEASED\n");
+        digitalWrite(TEST_LED_PIN, ((sw_State == PRESSED) ? HIGH : LOW));
 
         // We are only interested in RELEASED --> PRESSED and not PRESSED --> RELEASED
-        if (onButton_State == RELEASED){
+        if (sw_State == RELEASED){
           return;
         }
 
         Serial.print("valid button press: ");
-        Serial.print(onButton_State);
+        Serial.print(sw_State);
         Serial.print("\n");
         // Handle the button press now
         Serial.print("handling button press\n");
@@ -96,11 +107,24 @@ void loop() {
       }
     } else {
       // reset the debouncing timer
-      onButton_IsDebouncing = true;
-      onButton_LastDebounceTime = millis();
+      sw_IsDebouncing = true;
+      sw_LastDebounceTime = millis();
       Serial.print("starting debounce\n");
       return;
     }
+  }
+
+  // ---- Watch the Rotary Encoder for changes ----------------------------------------------
+  int reChange = read_rotary();
+  if( reChange ) {
+    Serial.printf("RE Changed=%d\n", reChange);
+    Serial.printf("RE old value = %d\n", reValue);
+    revalue = revalue + (reChange * RE_STEP);
+    if (reValue < RE_MIN )
+      revalue = RE_MIN;
+    if (reValue > RE_MAX)
+      revalue = RE_MAX;
+    serial.printf("RE new value = %d\n", reValue);
   }
 
   // ---- Watch the Mode Button for state changes -------------------------------------------
@@ -116,7 +140,7 @@ void loop() {
         modeButton_IsDebouncing = false;
         Serial.print("Debounce complete! Current state is: ");
         Serial.print(modeButton_State == PRESSED ? "PRESSED\n" : "RELEASED\n");
-        digitalWrite(TEST_LED_PIN, ((onButton_State == PRESSED) ? HIGH : LOW));
+        digitalWrite(TEST_LED_PIN, ((sw_State == PRESSED) ? HIGH : LOW));
 
         // We are only interested in RELEASED --> PRESSED and not PRESSED --> RELEASED
         if (modeButton_State == RELEASED){
@@ -193,8 +217,8 @@ void loop() {
 //  |                          1111 |     X      |     X      |
 //  -----------------------------------------------------------
 static int8_t INV = 0;
-static int8_t CW = -1;
-static int8_t CCW = 1;
+static int8_t CW = 1;
+static int8_t CCW = -1;
 static int8_t rot_enc_table[] = {0,CW,CCW,0,CCW,0,0,CW,CW,0,0,CCW,0,CCW,CW,0};
 
 // Reads the Rotary Encoder and deterines if it's current state compared to it's last state

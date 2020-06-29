@@ -1,4 +1,5 @@
 #include "FastLED.h"
+
 // ----------- ADD NEW MODES HERE ----------
 // Search for NEW MODES to find other places to change
 // When adding new modes, these modes need to be reflected in the mode button code: Search for zzModeButtonzz
@@ -54,7 +55,9 @@ void setup() {
 
   // Initialize the buttons
   pinMode(LIGHTING_ON_BUTTON_PIN, INPUT_PULLUP);
+  attachInterrupt(digitalPinToInterrupt(LIGHTING_ON_BUTTON_PIN), buttonPressChanged, FALLING);
   pinMode(LIGHTING_MODE_BUTTON_PIN, INPUT_PULLUP);
+  attachInterrupt(digitalPinToInterrupt(LIGHTING_MODE_BUTTON_PIN), buttonPressChanged, FALLING);
 
 }
 
@@ -168,6 +171,10 @@ void loop() {
     }
   }
 
+}
+
+void buttonPressChanged() {
+  
 }
 
 // Puts the LED lighting into which ever lighting mode we should be in.
