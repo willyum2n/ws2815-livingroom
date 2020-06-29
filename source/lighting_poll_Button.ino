@@ -117,14 +117,14 @@ void loop() {
   // ---- Watch the Rotary Encoder for changes ----------------------------------------------
   int reChange = read_rotary();
   if( reChange ) {
-    Serial.printf("RE Changed=%d\n", reChange);
-    Serial.printf("RE old value = %d\n", reValue);
-    revalue = revalue + (reChange * RE_STEP);
-    if (reValue < RE_MIN )
-      revalue = RE_MIN;
+    //Serial.print("RE Changed="); Serial.print(reChange); Serial.print("\n");
+    //Serial.print("RE old value="); Serial.print(reValue);  Serial.print("\n");
+    reValue = reValue + (reChange * RE_STEP);
+    if (reValue < RE_MIN)
+      reValue = RE_MIN;
     if (reValue > RE_MAX)
-      revalue = RE_MAX;
-    serial.printf("RE new value = %d\n", reValue);
+      reValue = RE_MAX;
+    Serial.print("reValue="); Serial.print(reValue); Serial.print("\n");
   }
 
   // ---- Watch the Mode Button for state changes -------------------------------------------
@@ -220,7 +220,7 @@ static int8_t INV = 0;
 static int8_t CW = 1;
 static int8_t CCW = -1;
 static int8_t rot_enc_table[] = {0,CW,CCW,0,CCW,0,0,CW,CW,0,0,CCW,0,CCW,CW,0};
-
+static uint8_t prevNextCode = 0;
 // Reads the Rotary Encoder and deterines if it's current state compared to it's last state
 // is a valid transition. This is needed because rotary encoders are really noisy devices
 // It returns the direction the encoder is turning as 1 for Clock Wise ror -1 for Coutner Clock Wise.
@@ -232,12 +232,12 @@ int8_t read_rotary() {
     prevNextCode <<= 2;
 
     // Read in both inputs and put the bits in the correct part of the "next" position
-    if (digitalRead(DATA)) {
+    if (digitalRead(RE_DATA_PIN)) {
     // 0000 00XX --> 0000 XXDC  (The 'D' is now 1)
         prevNextCode |= 0x02; 
     }
 
-    if (digitalRead(CLK)) {
+    if (digitalRead(RE_CLK_PIN)) {
     // 0000 00XX --> 0000 XXDC  (The 'C' is now 1)
         prevNextCode |= 0x01;  
     }
@@ -284,5 +284,3 @@ void changeLightingMode(LightingMode mode) {
   FastLED.show();
 
 }
-
-
