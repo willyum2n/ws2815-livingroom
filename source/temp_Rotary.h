@@ -17,9 +17,16 @@
 // No complete step yet.
 #define DIR_NONE 0x0
 // Clockwise step.
+
+#ifdef ROTARY_ACTIVE_LOW
+#define DIR_CW 0x20
+// Anti-clockwise step.
+#define DIR_CCW 0x10
+#else
 #define DIR_CW 0x10
 // Anti-clockwise step.
 #define DIR_CCW 0x20
+#endif
 
 class Rotary
 {

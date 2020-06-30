@@ -138,6 +138,7 @@ Rotary::Rotary(char _pin1, char _pin2) {
   state = R_START;
 }
 
+
 unsigned char Rotary::process() {
   // Grab state of input pins.
 #ifdef ROTARY_ACTIVE_LOW

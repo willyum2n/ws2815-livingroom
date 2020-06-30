@@ -1,4 +1,6 @@
 #include "FastLED.h"
+#include <Bounce2.h>
+
 // ----------- ADD NEW MODES HERE ----------
 // Search for NEW MODES to find other places to change
 // When adding new modes, these modes need to be reflected in the mode button code: Search for zzModeButtonzz
@@ -14,184 +16,149 @@ enum LightingMode {
 #define PRESSED LOW
 #define RELEASED HIGH
 
-// Variables for lighting system
+// Variables for FastLED and LED Strip
 const int LED_COUNT = 300;           // This is the total count of LEDs for the entire livingroom
 CRGB ledStrip[LED_COUNT];            // Storage for color data
-const int LED_DATA_PIN = 6;          // This is the output pin that delivers Color data to the LED Strip
+const int LED_STRIP_DATA_PIN = 6;    // This is the output pin that delivers Color data to the LED Strip
 LightingMode lightingMode = Off;     // We start with the lights off
 
 // Rotary Encoder with OnBoard switch
-const int RE_SW_PIN = 2;        // (Active-Low) Input pin connects to the SW pin on the Rotary Encoder that will turn on/off the lights
-int sw_State = RELEASED;        // the current currentButtonState of the input pin for Lighting_On_Button
-bool sw_IsDebouncing = false;   // Used to track when we are in a debounce situation after the OnButton input toggles state
-long sw_LastDebounceTime = 0;   // the last time the output pin was toggled
-uint8_t reValue = 100;          // Tracks the current value of the Rotary Encoder
+const uint8_t RE_SW_PIN = 2;        // (Active-Low) Input pin connects to the SW pin on the Rotary Encoder that will turn on/off the lights
+const uint8_t RE_DATA_PIN = 8;
+const uint8_t RE_CLK_PIN = 9;
 const int RE_MIN = 10;
 const int RE_MAX = 100;
 const int RE_STEP = 5;
+Bounce re_Switch_Debouncer = Bounce();  // SW on device
+// Bounce re_Data_Debouncer = Bounce();    // DATA on device
+int dataPinValue = RELEASED;
+ Bounce re_Clock_Debouncer = Bounce();   // CLK on device
+int clockPinValue = RELEASED;
+uint8_t reValue = 100;          // Tracks the current value of the Rotary Encoder
 
 // Mode Button
-const int LIGHTING_MODE_BUTTON_PIN = 3; // (Active-Low) Input pin connects to the button that will change the mode of the lights
-int modeButton_State = RELEASED;        // the current currentButtonState from the input pin for Lighting_Mode_Button
-bool modeButton_IsDebouncing = false;   // Used to track when we are in a debounce situation after the OnButton input toggles state
-long modeButton_LastDebounceTime = 0;   // the last time the output pin was toggled
-
-// the following variables are long's because the time, measured in milliseconds,
-// will quickly become a bigger number than can be stored in an int.
-long debounceDelay = 50;    // the debounce time; increase if the output flickers
-
-const int RE_DATA_PIN = 8;
-const int RE_CLK_PIN = 9;
-
-
-// OnBoard LED for testing buttons
-const int TEST_LED_PIN = 13;
+const uint8_t MODE_BUTTON_PIN = 3; // (Active-Low) Input pin connects to the button that will change the mode of the lights
+//Bounce mode_Debouncer(MODE_BUTTON_PIN,INPUT_PULLUP);
+Bounce mode_Debouncer = Bounce();
 
 
 void setup() {
-
-  //TODO:REMOVE once buttons work
-  pinMode(TEST_LED_PIN, OUTPUT);
   Serial.begin(57600);
 
   // Initialize the lights as off
-  FastLED.addLeds<WS2812, LED_DATA_PIN, GRB>(ledStrip, LED_COUNT);
-  fill_solid(ledStrip, LED_COUNT, CRGB::Black);
+  FastLED.addLeds<WS2812, LED_STRIP_DATA_PIN, GRB>(ledStrip, LED_COUNT);
+  changeLightingMode(lightingMode);
   FastLED.show();
 
   // Initialize the Rotary Encoder
-  pinMode(RE_SW_PIN, INPUT);        //TODO: I think the Rotary Encoder has a pullup resistor on board...check this
-  pinMode(RE_CLK_PIN, INPUT_PULLUP);
-  pinMode(RE_DATA_PIN, INPUT_PULLUP);
+  re_Switch_Debouncer.attach(RE_SW_PIN,INPUT_PULLUP); // Attach the debouncer to a pin with INPUT_PULLUP mode
+  re_Switch_Debouncer.interval(25); // Use a debounce interval of 25 milliseconds
+//  re_Data_Debouncer.attach(RE_DATA_PIN,INPUT_PULLUP); // Attach the debouncer to a pin with INPUT_PULLUP mode
+//  re_Data_Debouncer.interval(50); // Use a debounce interval of 25 milliseconds
+//  re_Data_Debouncer.update();
+  re_Clock_Debouncer.attach(RE_CLK_PIN,INPUT_PULLUP); // Attach the debouncer to a pin with INPUT_PULLUP mode
+  re_Clock_Debouncer.interval(5); // Use a debounce interval of 25 milliseconds
+  re_Clock_Debouncer.update();
+  pinMode(RE_DATA_PIN, INPUT);
+  pinMode(RE_CLK_PIN, INPUT);
+
 
   // Initialize the Momentary Switch
-  pinMode(LIGHTING_MODE_BUTTON_PIN, INPUT_PULLUP);
+  mode_Debouncer.attach(MODE_BUTTON_PIN,INPUT_PULLUP); // Attach the debouncer to a pin with INPUT_PULLUP mode
+  mode_Debouncer.interval(25); // Use a debounce interval of 25 milliseconds
+
+
+  // Serial.print("--------------  START  -------------\n");
+  // Serial.print("Initial data pin value ="); Serial.print(re_Data_Debouncer.read()) ; Serial.print("\n");
+  // Serial.print("Initial clock pin value="); Serial.print(re_Clock_Debouncer.read()); Serial.print("\n");
+  // Serial.print("--------------  START  -------------\n");
+
+  Serial.print("--------------  START  -------------\n");
+  Serial.print("Initial Data Pin Value=");  Serial.print(digitalRead(RE_DATA_PIN)); Serial.print("\n");
+  Serial.print("Initial Clock Pin Value="); Serial.print(digitalRead(RE_CLK_PIN));  Serial.print("\n");
+  Serial.print("---------------  END  --------------\n");
 
 }
 
 void loop() {
   
-  // Check the states of both of our buttons to determine if there have been any
-  // button presses.
-  int currentButtonState = RELEASED;
-
-  // ---- Watch the main On Button for state changes -------------------------------------------
-  currentButtonState = digitalRead(RE_SW_PIN);
-  if (currentButtonState == sw_State) {
-    sw_IsDebouncing = false;
-  } else {
-    if (sw_IsDebouncing) {
-      if ((millis() - sw_LastDebounceTime) > debounceDelay) {
-        // whatever the currentButtonState is at, it's been there for longer
-        // than the debounce delay, so take it as the actual current state:
-        sw_State = currentButtonState;
-        sw_IsDebouncing = false;
-        Serial.print("Debounce complete! Current state is: ");
-        Serial.print(sw_State == PRESSED ? "PRESSED\n" : "RELEASED\n");
-        digitalWrite(TEST_LED_PIN, ((sw_State == PRESSED) ? HIGH : LOW));
-
-        // We are only interested in RELEASED --> PRESSED and not PRESSED --> RELEASED
-        if (sw_State == RELEASED){
-          return;
-        }
-
-        Serial.print("valid button press: ");
-        Serial.print(sw_State);
-        Serial.print("\n");
-        // Handle the button press now
-        Serial.print("handling button press\n");
-        lightingMode = (lightingMode == Off ? FullOn : Off);
-        changeLightingMode(lightingMode);
-      } else {
-        return;
-      }
-    } else {
-      // reset the debouncing timer
-      sw_IsDebouncing = true;
-      sw_LastDebounceTime = millis();
-      Serial.print("starting debounce\n");
-      return;
-    }
-  }
+  mode_Debouncer.update(); // Update the Bounce instance
 
   // ---- Watch the Rotary Encoder for changes ----------------------------------------------
-  int reChange = read_rotary();
-  if( reChange ) {
-    //Serial.print("RE Changed="); Serial.print(reChange); Serial.print("\n");
-    //Serial.print("RE old value="); Serial.print(reValue);  Serial.print("\n");
-    reValue = reValue + (reChange * RE_STEP);
-    if (reValue < RE_MIN)
-      reValue = RE_MIN;
-    if (reValue > RE_MAX)
-      reValue = RE_MAX;
-    Serial.print("reValue="); Serial.print(reValue); Serial.print("\n");
-  }
+  // Check the button for presses
+  // re_Switch_Debouncer.update(); // Update the Bounce instance
+  // if ( re_Switch_Debouncer.fell() ) {  // Button is active-low
+  //   Serial.print("handling button press\n");
+  //   lightingMode = (lightingMode == Off ? FullOn : Off);
+  //   changeLightingMode(lightingMode);
+  // }
 
-  // ---- Watch the Mode Button for state changes -------------------------------------------
-  currentButtonState = digitalRead(LIGHTING_MODE_BUTTON_PIN);
-  if (currentButtonState == modeButton_State) {
-    modeButton_IsDebouncing = false;
-  } else {
-    if (modeButton_IsDebouncing) {
-      if ((millis() - modeButton_LastDebounceTime) > debounceDelay) {
-        // whatever the currentButtonState is at, it's been there for longer
-        // than the debounce delay, so take it as the actual current state:
-        modeButton_State = currentButtonState;
-        modeButton_IsDebouncing = false;
-        Serial.print("Debounce complete! Current state is: ");
-        Serial.print(modeButton_State == PRESSED ? "PRESSED\n" : "RELEASED\n");
-        digitalWrite(TEST_LED_PIN, ((sw_State == PRESSED) ? HIGH : LOW));
 
-        // We are only interested in RELEASED --> PRESSED and not PRESSED --> RELEASED
-        if (modeButton_State == RELEASED){
-          return;
-        }
+  // Check the knob for turns
+  // DATA and CLK lines on the encoder are really noisy too...debounce them
+  // uint8_t preDateUpdate = re_Data_Debouncer.read();
+  // uint8_t preClockUpdate = re_Clock_Debouncer.read();
+  
+  //bool dataChanged = re_Data_Debouncer.update();
+  bool clockChanged = re_Clock_Debouncer.update();
 
-        Serial.print("valid button press: ");
-        Serial.print(modeButton_State);
-        Serial.print("\n");
-        // Handle the button press now
-        digitalWrite(TEST_LED_PIN, ((modeButton_State == PRESSED) ? HIGH : LOW));
-        Serial.print("handling button press\n");
 
-        // ------------ ADD MAX MODE COUNT HERE TO ENABLE NEW MODES --------
-        // zzModeButtonzz
-        switch (lightingMode) {
-          case Off:
-            lightingMode = FullOn;
-            break;
-          case FullOn:
-            lightingMode = CraftingOnly;
-            break;
-          case CraftingOnly:
-            lightingMode = Party;
-            break;
-          case Party:
-            lightingMode = DancingWater;
-            break;
-          case DancingWater:
-            lightingMode = FullOn;
-            break;
-          Default:
-            // This shouldn’t be possible. We have a problem..turn off
-            lightingMode = Off;
-            break;
+ 
+  if ( clockChanged ) {
+    dataPinValue = digitalRead(RE_DATA_PIN);
+    clockPinValue = re_Clock_Debouncer.read();
 
-        }
-
-        changeLightingMode(lightingMode);
-      } else {
-        return;
-      }
-    } else {
-      // reset the debouncing timer
-      modeButton_IsDebouncing = true;
-      modeButton_LastDebounceTime = millis();
-      Serial.print("starting debounce\n");
-      return;
+    Serial.print("--------------  START  -------------\n");
+    Serial.println("CLK line toggled");
+    Serial.print("Data=");  Serial.println(dataPinValue);
+    Serial.print("Clock="); Serial.println(clockPinValue);
+    int reChange = read_rotary();
+    if( reChange ) {
+      //Serial.print("RE Changed="); Serial.print(reChange); Serial.print("\n");
+      //Serial.print("RE old value="); Serial.print(reValue);  Serial.print("\n");
+      reValue = reValue + (reChange * RE_STEP);
+      if (reValue < RE_MIN)
+        reValue = RE_MIN;
+      if (reValue > RE_MAX)
+        reValue = RE_MAX;
+      Serial.print("reValue="); Serial.print(reValue); Serial.print("\n");
     }
+    Serial.print("---------------  END  --------------\n");
   }
+  
 
+
+  // ---- Watch the Momentary Switch - Mode Button for state changes --------------------------
+  // Check the button for presses
+  // mode_Debouncer.update(); // Update the Bounce instance
+
+  // //Serial.print("inputline state="); Serial.print(blah); Serial.print("duration="); Serial.print(mode_Debouncer.duration()); Serial.print("\n");
+  // if ( mode_Debouncer.fell() ) {  // Button is active-low
+  //   // zzModeButtonzz
+  //   switch (lightingMode) {
+  //     case Off:
+  //       lightingMode = FullOn;
+  //       break;
+  //     case FullOn:
+  //       lightingMode = CraftingOnly;
+  //       break;
+  //     case CraftingOnly:
+  //       lightingMode = Party;
+  //       break;
+  //     case Party:
+  //       lightingMode = DancingWater;
+  //       break;
+  //     case DancingWater:
+  //       lightingMode = FullOn;
+  //       break;
+  //     Default:
+  //       // This shouldn’t be possible. We have a problem..turn off
+  //       Serial.print("OMFG! lightingMode is fucked! lightingMode="); Serial.print(lightingMode); Serial.print("\n");
+  //       lightingMode = Off;
+  //       break;
+  //   }
+  //   changeLightingMode(lightingMode);
+  // }
 }
 
 // A vald CW or CCW move returns 1, invalid returns 0.
@@ -232,12 +199,12 @@ int8_t read_rotary() {
     prevNextCode <<= 2;
 
     // Read in both inputs and put the bits in the correct part of the "next" position
-    if (digitalRead(RE_DATA_PIN)) {
+    if (dataPinValue) {
     // 0000 00XX --> 0000 XXDC  (The 'D' is now 1)
         prevNextCode |= 0x02; 
     }
 
-    if (digitalRead(RE_CLK_PIN)) {
+    if (clockPinValue) {
     // 0000 00XX --> 0000 XXDC  (The 'C' is now 1)
         prevNextCode |= 0x01;  
     }
@@ -251,33 +218,33 @@ int8_t read_rotary() {
 void changeLightingMode(LightingMode mode) {
   switch(mode) {
     case Off:
-      Serial.print("Moving to the 'Off' mode");
+      Serial.print("Moving to the 'Off' mode\n");
       fill_solid(ledStrip, LED_COUNT, CRGB::Black);
       
       break;
     case FullOn:
-      Serial.print("Moving to the 'FullOn' mode");
+      Serial.print("Moving to the 'FullOn' mode\n");
       fill_solid(ledStrip, LED_COUNT, CRGB::White);
       break;
     case CraftingOnly:
       //TODO: Determine real values for the room empirically on the lighting circuits are installed
       //TODO: This is important because the correct blocks of LED to change could be across several
       //TODO: Different ranges. Kicking this can down the road for testing purposes
-      Serial.print("Moving to the 'CraftingOnly' mode");
+      Serial.print("Moving to the 'CraftingOnly' mode\n");
       fill_solid(ledStrip, LED_COUNT, CRGB::Green);
       break;  
     case Party:
-      Serial.print("Moving to the 'Party' mode");
+      Serial.print("Moving to the 'Party' mode\n");
       fill_solid(ledStrip, LED_COUNT, CRGB::Red);
       break;
     case DancingWater:
-      Serial.print("Moving to the 'DancingWater' mode");
+      Serial.print("Moving to the 'DancingWater' mode\n");
       fill_solid(ledStrip, LED_COUNT, CRGB::Blue);
       break;
     default:
       //This should never happen!!! If it does...flash a few times
       //TODO: Do something better than this. Kicking this can down the road
-      Serial.print("WE SHOULD NOT BE HERE! OMG! WHAT HAPPENED!");
+      Serial.print("WE SHOULD NOT BE HERE! OMG! WHAT HAPPENED!\n");
       fill_solid(ledStrip, LED_COUNT, CRGB::Purple);
   }
 
