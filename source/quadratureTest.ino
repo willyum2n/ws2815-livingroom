@@ -1,9 +1,10 @@
 /* This help the learner watch the 1/4 steps in a Rotary Encoder */
 
 #include <Bounce2.h>
-#include "rotary.h"
+#include "Rotary.h"
 
 // Our buttons are Active Low. So let’s define some helper words for not screwing that up
+#define ROTARY_ACTIVE_LOW
 #define PRESSED LOW
 #define RELEASED HIGH
 
