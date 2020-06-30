@@ -21,6 +21,8 @@ int counter = 0;
 
 void setup() { 
     Serial.begin(57600);
+    Serial.print("DIR_CW="); Serial.println(DIR_CW);
+    Serial.print("DIR_CCW="); Serial.println(DIR_CCW);
 
     debouncer.attach(SW_PIN,INPUT_PULLUP); // Attach the debouncer to a pin with INPUT_PULLUP mode
     debouncer.interval(25); // Use a debounce interval of 25 milliseconds
@@ -59,7 +61,7 @@ void loop() {
         } else if (result == DIR_CCW) {
             counter--;
         }
-        Serial.print("Counter="); Serial.Println(coutner);
+        Serial.print("Counter="); Serial.println(counter);
         Serial.println("********************************");
     }
 
