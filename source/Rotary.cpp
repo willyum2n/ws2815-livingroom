@@ -14,13 +14,16 @@
  * The following is the typical sequence of code on the output when
  * moving from one step to the next:
  *
- *   Position   Bit1   Bit2
- *   ----------------------
- *     Step1     0      0
- *      1/4      1      0
- *      1/2      1      1
- *      3/4      0      1
- *     Step2     0      0
+ *   ----------------------     ----------------------     
+ *     ACTIVE HIGH TABLE         ACTIVE LOW HIGH TABLE         
+ *   ----------------------     ----------------------     
+ *   Position   Bit1   Bit2     Position   Bit1   Bit2     
+ *   ----------------------     ----------------------     
+ *     Step1     0      0         Step1     1      1       
+ *      1/4      1      0          1/4      0      1       
+ *      1/2      1      1          1/2      0      0       
+ *      3/4      0      1          3/4      1      0       
+ *     Step2     0      0         Step2     1      1       
  *
  * From this table, we can see that when moving from one 'click' to
  * the next, there are 4 changes in the output code.
@@ -137,7 +140,6 @@ Rotary::Rotary(char _pin1, char _pin2) {
   // Initialise state.
   state = R_START;
 }
-
 
 unsigned char Rotary::process() {
   // Grab state of input pins.
