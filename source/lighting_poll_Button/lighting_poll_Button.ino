@@ -19,14 +19,14 @@ enum LightingMode {
 
 // Variables for FastLED and LED Strip
 const int LED_COUNT = 300;           // This is the total count of LEDs for the entire livingroom
-const int LED_STRIP_DATA_PIN = 11;   // This is the output pin that delivers Color data to the LED Strip
+const int LED_STRIP_DATA_PIN = 6;    // This is the output pin that delivers Color data to the LED Strip
 CRGB ledStrip[LED_COUNT];            // Storage for color data
 LightingMode lightingMode = Off;     // We start with the lights off
 
 // Rotary Encoder with OnBoard switch
-const uint8_t RE_SW_PIN = 0;        // (Active-Low) Input pin connects to the SW pin on the Rotary Encoder that will turn on/off the lights
-const uint8_t RE_CLK_PIN = 10;
-const uint8_t RE_DATA_PIN = 12;
+const uint8_t RE_SW_PIN = 2;        // (Active-Low) Input pin connects to the SW pin on the Rotary Encoder that will turn on/off the lights
+const uint8_t RE_DATA_PIN = 8;
+const uint8_t RE_CLK_PIN = 9;
 Bounce re_Switch_Debouncer = Bounce();  // SW on device
 Rotary rotary = Rotary(RE_CLK_PIN, RE_DATA_PIN);
 
@@ -37,7 +37,7 @@ int currentBrightness = 255;          // Tracks the current value of the Rotary 
 int lastBrightness = 255;
 
 // Mode Button (Monentary Switch)
-const uint8_t MODE_BUTTON_PIN = 1; // (Active-Low) Input pin connects to the button that will change the mode of the lights
+const uint8_t MODE_BUTTON_PIN = 3; // (Active-Low) Input pin connects to the button that will change the mode of the lights
 Bounce mode_Debouncer = Bounce();
 
 // Animation Variables
