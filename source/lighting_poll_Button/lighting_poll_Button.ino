@@ -44,7 +44,8 @@ Bounce mode_Debouncer = Bounce();
 int animationFramePeriod = 0;   // The length of time a frame should be shown until it is redrawn. 0 means to never redraw
 long nextFrameTime = 0;         // Used to know when the animation frame should draw
 int currentFrame = 0;
-typedef int (*GeneralFunction) ();
+typedef void (*GeneralFunction) ();
+
 GeneralFunction currentAnimation = NULL;
 
 
@@ -233,8 +234,3 @@ void DancingWaterAnimation() {
 
     }
 }
-
-
-
-
-
