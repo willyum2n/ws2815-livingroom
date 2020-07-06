@@ -18,15 +18,15 @@ enum LightingMode {
 #define RELEASED HIGH
 
 // Variables for FastLED and LED Strip
-const int LED_COUNT = 300;           // This is the total count of LEDs for the entire livingroom
-const int LED_STRIP_DATA_PIN = 6;    // This is the output pin that delivers Color data to the LED Strip
+const int LED_COUNT = 10;           // This is the total count of LEDs for the entire livingroom
+const int LED_STRIP_DATA_PIN = 11;    // This is the output pin that delivers Color data to the LED Strip
 CRGB ledStrip[LED_COUNT];            // Storage for color data
 LightingMode lightingMode = Off;     // We start with the lights off
 
 // Rotary Encoder with OnBoard switch
-const uint8_t RE_SW_PIN = 2;        // (Active-Low) Input pin connects to the SW pin on the Rotary Encoder that will turn on/off the lights
-const uint8_t RE_DATA_PIN = 8;
-const uint8_t RE_CLK_PIN = 9;
+const uint8_t RE_SW_PIN = 0;        // (Active-Low) Input pin connects to the SW pin on the Rotary Encoder that will turn on/off the lights
+const uint8_t RE_DATA_PIN = 12;
+const uint8_t RE_CLK_PIN = 10;
 Bounce re_Switch_Debouncer = Bounce();  // SW on device
 Rotary rotary = Rotary(RE_CLK_PIN, RE_DATA_PIN);
 
@@ -37,7 +37,7 @@ int currentBrightness = 255;          // Tracks the current value of the Rotary 
 int lastBrightness = 255;
 
 // Mode Button (Monentary Switch)
-const uint8_t MODE_BUTTON_PIN = 3; // (Active-Low) Input pin connects to the button that will change the mode of the lights
+const uint8_t MODE_BUTTON_PIN = 1; // (Active-Low) Input pin connects to the button that will change the mode of the lights
 Bounce mode_Debouncer = Bounce();
 
 // Animation Variables
@@ -51,14 +51,15 @@ GeneralFunction currentAnimation = NULL;
 
 void setup() {
     Serial.begin(57600);
-
+    while (!Serial) ;
+    Serial.println("Starting up...");
     // Initialize the lights as off
     FastLED.addLeds<WS2812, LED_STRIP_DATA_PIN, GRB>(ledStrip, LED_COUNT);
     changeLightingMode(lightingMode);
 
     // Initialize the Rotary Encoder
     re_Switch_Debouncer.attach(RE_SW_PIN,INPUT_PULLUP); // Attach the debouncer to a pin with INPUT_PULLUP mode
-    re_Switch_Debouncer.interval(25); // Use a debounce interval of 25 milliseconds
+    re_Switch_Debouncer.interval(10); // Use a debounce interval of 25 milliseconds
 
     pinMode(RE_DATA_PIN, INPUT);
     pinMode(RE_CLK_PIN, INPUT);
@@ -66,7 +67,7 @@ void setup() {
 
     // Initialize the Momentary Switch
     mode_Debouncer.attach(MODE_BUTTON_PIN,INPUT_PULLUP); // Attach the debouncer to a pin with INPUT_PULLUP mode
-    mode_Debouncer.interval(25); // Use a debounce interval of 25 milliseconds
+    mode_Debouncer.interval(10); // Use a debounce interval of 25 milliseconds
 
 }
 
