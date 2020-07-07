@@ -22,7 +22,7 @@ In order to power all of the LEDs all the way around the room, (6) 12VDC power s
 
 
 ### References
-LED Strip: http://www.witop-tech.com/wp-content/uploads/2017/06/WS2815-12v-addressable-led-chip-specification-.pdf
-p-channel MOSFET for switching main power to LEDs: https://www.diodes.com/assets/Datasheets/74LVC1T45.pdf
-n-channel MOSFET to interface GPIO to p-channel gate: https://www.diodes.com/assets/Datasheets/products_inactive_data/DMN2041L.pdf
-Single bit Levelshifter: https://www.diodes.com/assets/Datasheets/74LVC1T45.pdf
+ - LED Strip: http://www.witop-tech.com/wp-content/uploads/2017/06/WS2815-12v-addressable-led-chip-specification-.pdf
+ - p-channel MOSFET for switching main power to LEDs: https://www.diodes.com/assets/Datasheets/74LVC1T45.pdf
+ - n-channel MOSFET to interface GPIO to p-channel gate: https://www.diodes.com/assets/Datasheets/products_inactive_data/DMN2041L.pdf
+ - Single bit Levelshifter: https://www.diodes.com/assets/Datasheets/74LVC1T45.pdf
