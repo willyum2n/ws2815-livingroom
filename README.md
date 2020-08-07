@@ -17,12 +17,24 @@ The firmware will support several modes of operation:
 
 The system will be controlled with a momentary press button and a Rotary Encoder (RE) (Which also contains a momentary switch). The switch on the RE will toggle the mode from Off to FullOn and back again. This acts as an On/Off switch. The knob on the RE will act as a brightness control (For modes that consider brightness). The momentary button will act as the MODE button. This button will cycle thru all modes accept the Off mode (Off will be skipped when the modes wrap around). These two components will be installed into a Single-gang faceplate to make a control panel device for a human. We are going to put 2 such devices in parallel (The switch parts. The RE will each need thier own I/O pins) so that we can have 2 control panels on opposite sides of the room.
 
-In order to power all of the LEDs all the way around the room, (6) 12VDC power supplies will be placed around the room, each supplying power to 1/6 of the chain. These power supplies will have a p-channel MOSFET that switches the power to the LED on/off because the WS2815 pulls a significant enough current when the system is doing nothing. This way, when the system is off, the 5050 chips cannot suck on the supplies. All the p-channel MOSFETs will controlled by a single n-channel MOSFET which is tied to a GPIO pin on the microcontroller. This way, the MCU can control all the power states of all the power supplies.
+In order to power all of the LEDs all the way around the room, (6) 12VDC power supplies will be placed around the room, each supplying power to 1/6 of the chain. These power supplies will have a p-channel MOSFET that switches the power to the LED on/off because the WS2815 pulls a significant enough current when the system is doing nothing. This way, when the system is off, the 5050 chips cannot suck on the supplies. All the p-channel MOSFETs will be controlled by a single n-channel MOSFET which is tied to a GPIO pin on the microcontroller. This way, the MCU can control all the power states of all the power supplies.
 
+## Crown Molding for indirect lighting
+All the LED Strip lighting will be mounted behind crown moulding and pointed at the ceiling. This will give a nice indirect light that should be scattered nicely by the white ceiling. The crown moulding will not be installed all the way in the corner where the wall and the ceiling meet, but rather, it will be installed so there is a very large gap. Crown moulding needs both the top and the bottom edge nailed and caulked to be secured in place. Because we are not adhearing the top edge, we will need to build a custom braket that will afix the moulding to the wall securely.
 
+We will also need something for the LED's to be glued to that point them toward the ceiling. In order to get the LEDs in the correct orientation, a long stick of wood will be glued/screwed to the back of the moulding. Then the LED's will be glued to this as well. This stick will also act to make the moulding more rigid and less droopy. Jigs will be 3D printed to position the wooden stick in the correct place while the glue dries.
+
+The braket that was designed to hold the moulding to the wall has a bit of complication to it. The braket was designed to screw into the moulding from the back side so that there are no imperfections on the front of the moulding. There will be new screw holds or nails holes to fill on the front side of the moulding (NICE!). The braket comes in two parts. One side is afixed to the moulding, and the other side is afixed to the wall. They will then mate and a metal pin will be inserted to join them together. This allows 16ft of moulding to be installed at a time, and there is an added bonus that the entire thing can come down later (So LED strips can be changed/maintenanced)
+
+## Wall Plates the human controls
+A custom wall plate will be 3D printed that will hold all the buttons and descrete electronics for the buttons. This wall plate will have a pigtail that will plug into Cat5 cable to connect it back to the main MCU in a different part of the room. This will allow for the wall plate to be added/removed easily for installation and maintenance purposes
+
+#### 3D Printed Parts:
+//TODO: 
 
 ### References
  - LED Strip: http://www.witop-tech.com/wp-content/uploads/2017/06/WS2815-12v-addressable-led-chip-specification-.pdf
  - p-channel MOSFET for switching main power to LEDs: https://www.diodes.com/assets/Datasheets/74LVC1T45.pdf
  - n-channel MOSFET to interface GPIO to p-channel gate: https://www.diodes.com/assets/Datasheets/products_inactive_data/DMN2041L.pdf
  - Single bit Levelshifter: https://www.diodes.com/assets/Datasheets/74LVC1T45.pdf
+ - Crown Moulding: ALB 49 CROWN 3-5/8" FMD I FINISHED MOULDING (TSCA TITLE VI COMLIANT) 
