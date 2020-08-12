@@ -33,9 +33,9 @@ A custom wall plate will be 3D printed that will hold all the buttons and descre
 |:-----------|:------------|:---------------:|
 | RE_GND     | Pin1: Black  | O/W |
 | RE_+       | Pin2: Blue   | O |
-| RE_CLK     | Pin3: White  | Gr/W |
+| RE_SW      | Pin3: White  | Gr/W |
 | RE_DT      | Pin4: Yellow | B |
-| RE_SW      | Pin5: Green  | B/W |
+| RE_CLK     | Pin5: Green  | B/W |
 |            | Pin6: Red    | Gr |
 | SW_A (GND) | Pin7: Orange | Br/W |
 | SW_B (SIG) | Pin8: Brown  | Br |
