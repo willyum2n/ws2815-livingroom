@@ -27,7 +27,22 @@ We will also need something for the LED's to be glued to that point them toward 
 The bracket that was designed to hold the moulding to the wall has a bit of complication to it. The bracket was designed to screw into the moulding from the back side so that there are no imperfections on the front of the moulding. There will be new screw holds or nails holes to fill on the front side of the moulding (NICE!). The bracket comes in two parts. One side is afixed to the moulding, and the other side is afixed to the wall. They will then mate and a metal pin will be inserted to join them together. This allows 16ft of moulding to be installed at a time, and there is an added bonus that the entire thing can come down later (So LED strips can be changed/maintenanced)
 
 ## Wall Plates the human controls
-A custom wall plate will be 3D printed that will hold all the buttons and descrete electronics for the buttons. This wall plate will have a pigtail that will plug into Cat5 cable to connect it back to the main MCU in a different part of the room. This will allow for the wall plate to be added/removed easily for installation and maintenance purposes
+A custom wall plate will be 3D printed that will hold all the buttons and descrete electronics for the buttons. This wall plate will have a CAT5 connector that will physically connect to the plate and be glued in place. 7 of 8 of the conductors in this connector will be used. Cat5 cable will connect it back to the main MCU in a different part of the room. This will allow for the wall plate to be added/removed easily for installation and maintenance purposes. Here is the wiring diagram at the plate:
+
+| Signal     | SSCON Side  | CAT5 Cable 568B |
+|:-----------|:------------|:---------------:|
+| RE_GND     | Pin1: Black  | O/W |
+| RE_+       | Pin2: Blue   | O |
+| RE_CLK     | Pin3: White  | Gr/W |
+| RE_DT      | Pin4: Yellow | B |
+| RE_SW      | Pin5: Green  | B/W |
+|            | Pin6: Red    | Gr |
+| SW_A (GND) | Pin7: Orange | Br/W |
+| SW_B (SIG) | Pin8: Brown  | Br |
+
+
+Because this is a livingroom with several points of ingress/egress, there will be two different Wall Plates for human control on opposite sides of the living room. The +, GND, and Switches will be wired in parallel *at the controller* (This effectively gives them OR logic). The RE_DT and RE_CLK will need seperate I/O pins at the controller to watch each Rotary Encoder seperately.
+
 
 ## 3D Printed Parts:
 //TODO: 
@@ -37,4 +52,7 @@ A custom wall plate will be 3D printed that will hold all the buttons and descre
  - p-channel MOSFET for switching main power to LEDs: https://www.diodes.com/assets/Datasheets/74LVC1T45.pdf
  - n-channel MOSFET to interface GPIO to p-channel gate: https://www.diodes.com/assets/Datasheets/products_inactive_data/DMN2041L.pdf
  - Single bit Levelshifter: https://www.diodes.com/assets/Datasheets/74LVC1T45.pdf
- - Crown Moulding: ALB 49 CROWN 3-5/8" FMD I FINISHED MOULDING (TSCA TITLE VI COMLIANT) 
+ - Crown Moulding: ALB 49 CROWN 3-5/8" FMD I FINISHED MOULDING (TSCA TITLE VI COMLIANT)
+ - Sscon 5pcs RJ45 8P8C CAT5 Network Connector Cable: https://www.amazon.com/gp/product/B07S34KPG2/ref=ppx_yo_dt_b_asin_title_o01_s00?ie=UTF8&psc=1
+ - Rotary Encoder (With Momenary Switch): 
+ - Momentary Switch: 
